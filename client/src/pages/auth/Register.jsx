@@ -29,7 +29,7 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 460 }}>
         <div className="auth-logo">
-          <div className="auth-logo-icon">🚚</div>
+          <div className="auth-logo-icon">LM</div>
           <span className="auth-logo-name">Last-Mile Tracker</span>
         </div>
         <h1 className="auth-title">Create account</h1>
@@ -69,6 +69,9 @@ export default function Register() {
 
         <div className="auth-footer">
           Already have an account? <Link to="/login">Sign in</Link>
+        </div>
+        <div className="auth-footer" style={{ marginTop: 10 }}>
+          No account? <Link to="/track">Track an order</Link>
         </div>
       </div>
     </div>

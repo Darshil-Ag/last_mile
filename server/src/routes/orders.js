@@ -7,6 +7,13 @@ const { sendStatusEmail } = require('../services/emailService');
 
 router.use(verifyJWT);
 
+// ─── GET /api/orders/track ────────────────────────────────────────────────────
+// PUBLIC — no auth. Returns order + timeline only if order_number AND phone match.
+// Rate-limited: 10 requests per IP per 60 seconds (in-memory, single-process safe).
+// NOTE: registered separately via app.js below the CORS middleware but BEFORE
+// the authenticated router — see the route mounting comment in app.js.
+
+
 // ─── Shared helper: fetch the customer user record ────────────────────────────
 async function getUser(userId) {
   const { data } = await supabase

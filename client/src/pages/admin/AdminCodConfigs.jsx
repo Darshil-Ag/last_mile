@@ -82,7 +82,7 @@ export default function AdminCodConfigs() {
             {configs.map((c) => (
               <tr key={c.id}>
                 <td>
-                  <span className={`badge ${c.order_type === 'B2B' ? 'badge-purple' : 'badge-info'}`}>
+                  <span className={`badge ${c.order_type === 'B2B' ? 'badge-b2b' : 'badge-b2c'}`}>
                     {c.order_type}
                   </span>
                 </td>

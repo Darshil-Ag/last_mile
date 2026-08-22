@@ -4,8 +4,10 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 const customerNav = [
-  { label: 'My Orders', icon: '📦', path: '/dashboard' },
-  { label: 'New Order', icon: '➕', path: '/orders/new' },
+  { label: 'My Orders',        icon: 'myOrders',    path: '/dashboard' },
+  { label: 'New Order',        icon: 'newOrder',     path: '/orders/new' },
+  { label: 'Track Order',      icon: 'trackOrder',   path: '/track' },
+  { label: 'Rate Calculator',  icon: 'calculator',   path: '/calculate' },
 ];
 
 export default function CustomerLayout() {

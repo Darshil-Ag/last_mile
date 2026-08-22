@@ -6,6 +6,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
+// Public (no auth required)
+import PublicTrack      from './pages/public/PublicTrack';
+import PublicCalculator from './pages/public/PublicCalculator';
+
 // Customer
 import CustomerLayout from './components/layout/CustomerLayout';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
@@ -52,8 +56,13 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login"    element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      {/* Public pages — no auth, no nav shell */}
+      <Route path="/track"           element={<PublicTrack />} />
+      <Route path="/track/:orderId"  element={<PublicTrack />} />
+      <Route path="/calculate"       element={<PublicCalculator />} />
 
       {/* Customer */}
       <Route path="/dashboard" element={<RoleRoute role="CUSTOMER"><CustomerLayout /></RoleRoute>}>

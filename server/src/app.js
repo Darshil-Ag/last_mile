@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const zoneRoutes = require('./routes/zones');
 const rateCardRoutes = require('./routes/ratecards');
 const codConfigRoutes = require('./routes/codconfigs');
+const trackRoutes = require('./routes/track');   // PUBLIC — no auth wall
 const orderRoutes = require('./routes/orders');
 const agentRoutes = require('./routes/agents');
 
@@ -48,6 +49,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/zones', zoneRoutes);
 app.use('/api/rate-cards', rateCardRoutes);
 app.use('/api/cod-configs', codConfigRoutes);
+// PUBLIC track endpoint — mounted first so /api/orders/track bypasses verifyJWT
+app.use('/api/orders', trackRoutes);
+// Authenticated orders router (verifyJWT applied inside)
 app.use('/api/orders', orderRoutes);
 app.use('/api/agents', agentRoutes);
 

@@ -4,6 +4,7 @@ import { ordersAPI } from '../../services/api';
 import { StatusBadge } from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
 import Modal from '../../components/ui/Modal';
+import OrderTimeline from '../../components/ui/OrderTimeline';
 import { formatCurrency, formatDateTime, formatDate, formatWeight, statusIcon } from '../../utils/formatters';
 
 export default function TrackOrder() {
@@ -114,35 +115,10 @@ export default function TrackOrder() {
         </div>
       )}
 
-      {/* Tracking timeline */}
+      {/* Tracking timeline — reuses shared OrderTimeline component */}
       <div className="card">
         <div className="card-title" style={{ marginBottom: 20 }}>🕒 Tracking Timeline</div>
-        {events.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-title">No events yet</div></div>
-        ) : (
-          <div className="timeline">
-            {events.map((ev, i) => {
-              const isLast = i === events.length - 1;
-              const dotClass = ev.status === 'DELIVERED' ? 'done' : ev.status === 'FAILED' ? 'failed' : isLast ? 'active' : '';
-              return (
-                <div key={ev.id} className="timeline-item">
-                  <div className="timeline-left">
-                    <div className={`timeline-dot ${dotClass}`}>{statusIcon(ev.status)}</div>
-                    {!isLast && <div className="timeline-line" />}
-                  </div>
-                  <div className="timeline-content">
-                    <div className="timeline-status">{ev.status.replace(/_/g, ' ')}</div>
-                    <div className="timeline-meta">
-                      <span>{formatDateTime(ev.created_at)}</span>
-                      {ev.actor?.full_name && <span>· {ev.actor.full_name} ({ev.actor_role})</span>}
-                    </div>
-                    {ev.remarks && <div className="timeline-remarks">{ev.remarks}</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <OrderTimeline events={order.tracking_events ?? []} />
       </div>
 
       {/* Reschedule Modal */}

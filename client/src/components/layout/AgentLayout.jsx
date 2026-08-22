@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 const agentNav = [
-  { label: 'My Deliveries', icon: '🚚', path: '/agent' },
+  { label: 'My Deliveries', icon: 'deliveries', path: '/agent' },
 ];
 
 export default function AgentLayout() {

@@ -29,7 +29,7 @@ export const getInitials = (name = '') =>
 /** Map order_status → badge variant */
 export const statusVariant = (status) => ({
   CREATED:          'info',
-  ASSIGNED:         'purple',
+  ASSIGNED:         'info',
   PICKED_UP:        'warning',
   IN_TRANSIT:       'warning',
   OUT_FOR_DELIVERY: 'warning',
@@ -42,7 +42,7 @@ export const statusVariant = (status) => ({
 export const availabilityVariant = (status) => ({
   AVAILABLE: 'success',
   BUSY:      'warning',
-  OFFLINE:   'default',
+  OFFLINE:   'offline',
 }[status] ?? 'default');
 
 /** Human-readable order status labels */

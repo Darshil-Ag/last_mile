@@ -121,7 +121,7 @@ export default function AdminZones() {
               <div className="flex-between mb-16">
                 <div>
                   <h3 className="card-title" style={{ fontSize: 16 }}>{zone.name}</h3>
-                  <span className="badge badge-purple mt-4">{zone.code}</span>
+                  <span className="badge badge-default mt-4">{zone.code}</span>
                 </div>
                 <span className={`badge ${zone.is_active ? 'badge-success' : 'badge-default'}`}>
                   {zone.is_active ? 'Active' : 'Inactive'}

@@ -7,6 +7,9 @@ const VARIANT_MAP = {
   danger:  'badge-danger',
   info:    'badge-info',
   purple:  'badge-purple',
+  offline: 'badge-offline',
+  b2b:     'badge-b2b',
+  b2c:     'badge-b2c',
   default: 'badge-default',
 };
 

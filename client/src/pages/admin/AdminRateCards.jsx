@@ -103,7 +103,7 @@ export default function AdminRateCards() {
                   <td className="text-primary">{rc.from_zone?.name} ({rc.from_zone?.code})</td>
                   <td className="text-primary">{rc.to_zone?.name} ({rc.to_zone?.code})</td>
                   <td>
-                    <span className={`badge ${rc.order_type === 'B2B' ? 'badge-purple' : 'badge-info'}`}>
+                    <span className={`badge ${rc.order_type === 'B2B' ? 'badge-b2b' : 'badge-b2c'}`}>
                       {rc.order_type}
                     </span>
                   </td>

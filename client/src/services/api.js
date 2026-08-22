@@ -77,12 +77,28 @@ export const ordersAPI = {
   assign: (id, data) => api.post(`/orders/${id}/assign`, data),
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   reschedule: (id, data) => api.post(`/orders/${id}/reschedule`, data),
+
+  /**
+   * Public tracking lookup — NOT sent through the axios instance so no
+   * Authorization header is attached. Both order_number AND phone must
+   * match on the server before any data is returned.
+   */
+  trackPublic: (orderNumber, phone) => {
+    const base = import.meta.env.VITE_API_BASE_URL
+      ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '').replace(/\/api$/, '') + '/api'
+      : '/api';
+    const params = new URLSearchParams({ order_number: orderNumber, phone });
+    return fetch(`${base}/orders/track?${params}`);
+  },
 };
 
 // ─── Agents ─────────────────────────────────────────────────
 export const agentsAPI = {
   list: (params) => api.get('/agents', { params }),
   create: (data) => api.post('/agents', data),
+  update: (id, data) => api.put(`/agents/${id}`, data),
+  deactivate: (id) => api.patch(`/agents/${id}/deactivate`),
+  reactivate: (id) => api.patch(`/agents/${id}/reactivate`),
   me: () => api.get('/agents/me'),
   myOrders: () => api.get('/agents/me/orders'),
   updateLocation: (data) => api.put('/agents/me/location', data),
