@@ -71,6 +71,7 @@ export const codConfigsAPI = {
 export const ordersAPI = {
   calculate: (data) => api.post('/orders/calculate', data),
   create: (data) => api.post('/orders', data),
+  list: () => api.get('/orders/mine'),
   listAll: (params) => api.get('/orders', { params }),
   mine: () => api.get('/orders/mine'),
   get: (id) => api.get(`/orders/${id}`),

@@ -27,9 +27,10 @@ export default function CustomerTrack() {
 
   // Load customer's recent orders for quick-click tracking
   useEffect(() => {
-    ordersAPI.list()
+    const fetchMine = ordersAPI.mine ? ordersAPI.mine() : ordersAPI.list();
+    fetchMine
       .then((r) => setMyOrders(r.data || []))
-      .catch(() => {})
+      .catch(() => setMyOrders([]))
       .finally(() => setRecentLoading(false));
   }, []);
 
@@ -43,14 +44,15 @@ export default function CustomerTrack() {
 
     try {
       // 1. Check if searchVal matches an order in myOrders list
-      let match = myOrders.find(
+      let match = (myOrders || []).find(
         (o) => o.order_number?.toLowerCase() === targetTerm || o.id?.toLowerCase() === targetTerm
       );
 
       // 2. If not found in cached list, fetch fresh list
       if (!match) {
         try {
-          const listRes = await ordersAPI.list();
+          const fetchMine = ordersAPI.mine ? ordersAPI.mine() : ordersAPI.list();
+          const listRes = await fetchMine;
           const freshList = listRes.data || [];
           setMyOrders(freshList);
           match = freshList.find(
