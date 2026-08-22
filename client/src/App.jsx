@@ -105,9 +105,12 @@ function AppRoutes() {
   );
 }
 
+import SplashIntro from './components/ui/SplashIntro';
+
 export default function App() {
   return (
     <AuthProvider>
+      <SplashIntro />
       <AppRoutes />
     </AuthProvider>
   );

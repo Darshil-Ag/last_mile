@@ -4,13 +4,35 @@ import { formatCurrency, formatWeight } from '../../utils/formatters';
 
 /* ─── Inline truck SVG (shared with Login + PublicTrack) ─────── */
 const TruckSVG = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-    aria-hidden="true">
-    <rect x="1" y="3" width="15" height="13" rx="1" />
-    <path d="M16 8h4l3 5v3h-7V8z" />
+  <svg
+    width="28"
+    height="22"
+    viewBox="-5 0 33 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {/* Body & Cab */}
+    <rect x="1" y="3" width="15" height="13" rx="1" fill="var(--paper)" />
+    <path d="M16 8h4l3 5v3h-7V8z" fill="var(--paper)" />
+
+    {/* Headlight Lamp & Beam Cone */}
+    <polygon points="23,13 27.5,11 27.5,17 23,15" fill="var(--signal)" opacity="0.4" stroke="none" />
+    <rect x="22.5" y="13.2" width="1" height="2.6" rx="0.5" fill="var(--signal)" stroke="none" />
+
+    {/* Wheels */}
     <circle cx="5.5" cy="18.5" r="1.5" />
     <circle cx="18.5" cy="18.5" r="1.5" />
+
+    {/* Exhaust Smoke Puffs */}
+    <g className="smoke-puff-group">
+      <circle className="smoke-puff smoke-1" cx="-1" cy="16" r="1.5" fill="var(--mist)" opacity="0.7" stroke="none" />
+      <circle className="smoke-puff smoke-2" cx="-3.5" cy="15.5" r="2.2" fill="var(--mist)" opacity="0.5" stroke="none" />
+      <circle className="smoke-puff smoke-3" cx="-6" cy="15" r="3" fill="var(--mist)" opacity="0.4" stroke="none" />
+    </g>
   </svg>
 );
 
