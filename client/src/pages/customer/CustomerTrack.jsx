@@ -35,29 +35,36 @@ export default function CustomerTrack() {
 
   // Fetch tracking details for a specific order ID or order number
   const fetchTrack = async (searchVal) => {
-    if (!searchVal.trim()) return;
+    if (!searchVal || !searchVal.trim()) return;
     setLoading(true);
     setError('');
     setOrder(null);
+    const targetTerm = searchVal.trim().toLowerCase();
+
     try {
-      // First try fetching directly by ID/number via ordersAPI.get
-      const res = await ordersAPI.get(searchVal.trim());
+      // 1. Check if searchVal matches an order in myOrders list
+      let match = myOrders.find(
+        (o) => o.order_number?.toLowerCase() === targetTerm || o.id?.toLowerCase() === targetTerm
+      );
+
+      // 2. If not found in cached list, fetch fresh list
+      if (!match) {
+        try {
+          const listRes = await ordersAPI.list();
+          const freshList = listRes.data || [];
+          setMyOrders(freshList);
+          match = freshList.find(
+            (o) => o.order_number?.toLowerCase() === targetTerm || o.id?.toLowerCase() === targetTerm
+          );
+        } catch (e) {}
+      }
+
+      // 3. Get exact order details using resolved ID (or fallback to searchVal if UUID)
+      const targetId = match ? match.id : searchVal.trim();
+      const res = await ordersAPI.get(targetId);
       setOrder(res.data);
     } catch (err) {
-      // If direct ID lookup fails, search inside user's myOrders list by order_number
-      const match = myOrders.find(
-        (o) => o.order_number.toLowerCase() === searchVal.trim().toLowerCase() || o.id === searchVal.trim()
-      );
-      if (match) {
-        try {
-          const res2 = await ordersAPI.get(match.id);
-          setOrder(res2.data);
-        } catch (e2) {
-          setError('Order not found. Please verify the order number.');
-        }
-      } else {
-        setError(err.response?.data?.error || 'Order not found. Please verify the order number.');
-      }
+      setError(err.response?.data?.error || 'Order not found. Please verify the order number.');
     } finally {
       setLoading(false);
     }
