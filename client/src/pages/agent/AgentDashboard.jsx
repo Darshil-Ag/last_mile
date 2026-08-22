@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { agentsAPI } from '../../services/api';
 import { StatusBadge, AvailabilityBadge } from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import { formatDateTime, formatDate } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
 
 export default function AgentDashboard() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function AgentDashboard() {
   useEffect(() => { loadData(); }, []);
 
   const toggleAvailability = async () => {
-    if (!agent) return;
+    if (!agent || agent.availability_status === 'BUSY') return;
     const next = agent.availability_status === 'AVAILABLE' ? 'OFFLINE' : 'AVAILABLE';
     setToggling(true);
     try {
@@ -49,9 +49,15 @@ export default function AgentDashboard() {
           id="toggle-availability"
           className={`btn ${agent?.availability_status === 'AVAILABLE' ? 'btn-secondary' : 'btn-primary'}`}
           onClick={toggleAvailability}
-          disabled={toggling}
+          disabled={toggling || agent?.availability_status === 'BUSY'}
         >
-          {toggling ? 'Updating…' : agent?.availability_status === 'AVAILABLE' ? '🔴 Go Offline' : '🟢 Go Available'}
+          {toggling
+            ? 'Updating…'
+            : agent?.availability_status === 'BUSY'
+            ? '🚚 Currently Busy on Delivery'
+            : agent?.availability_status === 'AVAILABLE'
+            ? '🔴 Go Offline'
+            : '🟢 Go Available'}
         </button>
       </div>
 
