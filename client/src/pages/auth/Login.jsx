@@ -50,7 +50,11 @@ export default function Login() {
       const user = await login(form.email, form.password);
       if (user.role === 'ADMIN') navigate('/admin');
       else if (user.role === 'AGENT') navigate('/agent');
-      else navigate('/dashboard');
+      else {
+        let hasDraft = false;
+        try { hasDraft = !!sessionStorage.getItem('pending_order_draft'); } catch (e) {}
+        navigate(hasDraft ? '/orders/new' : '/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Check your credentials.');
     } finally { setLoading(false); }

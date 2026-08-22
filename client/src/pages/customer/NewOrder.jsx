@@ -24,6 +24,21 @@ export default function NewOrder() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Load prefilled values if saved from the Public Calculator
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('pending_order_draft');
+      if (saved) {
+        const draft = JSON.parse(saved);
+        setForm((f) => ({
+          ...f,
+          ...draft,
+        }));
+        sessionStorage.removeItem('pending_order_draft');
+      }
+    } catch (e) {}
+  }, []);
+
   // Auto-calculate charge whenever key fields change
   useEffect(() => {
     const { pickup_pincode, drop_pincode, length_cm, breadth_cm, height_cm, actual_weight_kg, order_type, payment_type } = form;

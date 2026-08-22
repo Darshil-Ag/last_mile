@@ -119,6 +119,14 @@ export default function PublicCalculator() {
     form.actual_weight_kg, form.order_type, form.payment_type,
   ]);
 
+  const handleSaveDraft = () => {
+    try {
+      if (form.pickup_pincode || form.drop_pincode || form.length_cm) {
+        sessionStorage.setItem('pending_order_draft', JSON.stringify(form));
+      }
+    } catch (e) {}
+  };
+
   return (
     <div className="auth-page">
       <div style={{ position: 'relative', width: '100%', maxWidth: 480, zIndex: 1 }}>
@@ -294,7 +302,7 @@ export default function PublicCalculator() {
           <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div className="auth-footer">
               Sign in to place this order —{' '}
-              <Link to="/login">Sign in</Link>
+              <Link to="/login" onClick={handleSaveDraft}>Sign in</Link>
             </div>
             <div className="auth-footer">
               Already have an order?{' '}

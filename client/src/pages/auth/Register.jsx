@@ -19,7 +19,9 @@ export default function Register() {
     setLoading(true);
     try {
       await register({ full_name: form.full_name, email: form.email, phone: form.phone, password: form.password });
-      navigate('/dashboard');
+      let hasDraft = false;
+      try { hasDraft = !!sessionStorage.getItem('pending_order_draft'); } catch (e) {}
+      navigate(hasDraft ? '/orders/new' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally { setLoading(false); }
