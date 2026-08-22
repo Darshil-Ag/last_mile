@@ -17,12 +17,17 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',');
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim());
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. curl, Postman, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow non-browser requests (curl, Postman, mobile apps) or wildcard '*'
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
       callback(new Error(`CORS: origin "${origin}" not allowed`));
     },
     credentials: true,
