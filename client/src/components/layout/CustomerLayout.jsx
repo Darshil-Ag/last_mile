@@ -6,7 +6,7 @@ import Navbar from './Navbar';
 const customerNav = [
   { label: 'My Orders',        icon: 'myOrders',    path: '/dashboard' },
   { label: 'New Order',        icon: 'newOrder',     path: '/orders/new' },
-  { label: 'Track Order',      icon: 'trackOrder',   path: '/track' },
+  { label: 'Track Order',      icon: 'trackOrder',   path: '/orders/track' },
   { label: 'Rate Calculator',  icon: 'calculator',   path: '/calculate' },
 ];
 

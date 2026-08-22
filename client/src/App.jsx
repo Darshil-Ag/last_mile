@@ -15,6 +15,7 @@ import CustomerLayout from './components/layout/CustomerLayout';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import NewOrder from './pages/customer/NewOrder';
 import TrackOrder from './pages/customer/TrackOrder';
+import CustomerTrack from './pages/customer/CustomerTrack';
 
 // Agent
 import AgentLayout from './components/layout/AgentLayout';
@@ -70,6 +71,9 @@ function AppRoutes() {
       </Route>
       <Route path="/orders/new" element={<RoleRoute role="CUSTOMER"><CustomerLayout /></RoleRoute>}>
         <Route index element={<NewOrder />} />
+      </Route>
+      <Route path="/orders/track" element={<RoleRoute role="CUSTOMER"><CustomerLayout /></RoleRoute>}>
+        <Route index element={<CustomerTrack />} />
       </Route>
       <Route path="/orders/:id" element={<RoleRoute role="CUSTOMER"><CustomerLayout /></RoleRoute>}>
         <Route index element={<TrackOrder />} />

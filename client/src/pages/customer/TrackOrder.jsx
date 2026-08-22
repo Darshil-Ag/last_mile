@@ -7,9 +7,12 @@ import Modal from '../../components/ui/Modal';
 import OrderTimeline from '../../components/ui/OrderTimeline';
 import { formatCurrency, formatDateTime, formatDate, formatWeight, statusIcon } from '../../utils/formatters';
 
+import { useAuth } from '../../context/AuthContext';
+
 export default function TrackOrder() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -58,6 +61,25 @@ export default function TrackOrder() {
             🔄 Reschedule
           </button>
         )}
+      </div>
+
+      {/* Confirmation Email Sent Banner */}
+      <div style={{
+        backgroundColor: 'var(--signal-lt)',
+        border: '1px solid var(--signal)',
+        borderRadius: 'var(--radius-md)',
+        padding: '12px 16px',
+        marginBottom: 20,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        fontSize: 13.5,
+        color: 'var(--ink)'
+      }}>
+        <span style={{ fontSize: 16 }}>📧</span>
+        <span>
+          Confirmation mail has been sent to : <strong style={{ color: 'var(--signal)', fontFamily: "'IBM Plex Mono', monospace" }}>{user?.email || order.customer?.email || 'registered email id'}</strong>
+        </span>
       </div>
 
       {/* Summary cards */}
