@@ -196,7 +196,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // ─── GET /api/orders ──────────────────────────────────────────────────────────
-// Admin: all orders with optional filters
+// Admin: all orders with optional filters (supports assigned and newly created unassigned orders)
 router.get('/', requireRole('ADMIN'), async (req, res, next) => {
   try {
     const { status, pickup_zone_id, drop_zone_id, agent_id, page = 1, limit = 20 } = req.query;
@@ -210,22 +210,18 @@ router.get('/', requireRole('ADMIN'), async (req, res, next) => {
         creator:created_by(id, full_name, role),
         pickup_zone:pickup_zone_id(id, name, code),
         drop_zone:drop_zone_id(id, name, code),
-        current_assignment:order_assignments!inner(
-          id, agent_id, assignment_type, assigned_at,
-          agents!inner(id, user_id, users!inner(full_name))
+        order_assignments(
+          id, agent_id, assignment_type, assigned_at, unassigned_at,
+          agent:agent_id(id, user_id, users(full_name))
         )
-      `, { count: 'exact' })
-      .is('order_assignments.unassigned_at', null)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + Number(limit) - 1);
+      `, { count: 'exact' });
 
     if (status) query = query.eq('current_status', status);
     if (pickup_zone_id) query = query.eq('pickup_zone_id', pickup_zone_id);
     if (drop_zone_id) query = query.eq('drop_zone_id', drop_zone_id);
 
-    // Filter by agent (via order_assignments join)
+    // Filter by agent (via subquery on order_assignments)
     if (agent_id) {
-      // Subquery: get order IDs assigned to this agent currently
       const { data: agentOrders } = await supabase
         .from('order_assignments')
         .select('order_id')
@@ -233,14 +229,30 @@ router.get('/', requireRole('ADMIN'), async (req, res, next) => {
         .is('unassigned_at', null);
 
       const orderIds = (agentOrders ?? []).map((o) => o.order_id);
-      if (orderIds.length === 0) return res.json({ data: [], total: 0, page: Number(page), limit: Number(limit) });
+      if (orderIds.length === 0) {
+        return res.json({ data: [], total: 0, page: Number(page), limit: Number(limit) });
+      }
       query = query.in('id', orderIds);
     }
+
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + Number(limit) - 1);
 
     const { data, error, count } = await query;
     if (error) throw error;
 
-    res.json({ data, total: count, page: Number(page), limit: Number(limit) });
+    // Map current_assignment to the active assignment (where unassigned_at is null)
+    const formattedData = (data || []).map((order) => {
+      const assignments = order.order_assignments || [];
+      const current_assignment = assignments.find((a) => a.unassigned_at === null) || null;
+      return {
+        ...order,
+        current_assignment,
+      };
+    });
+
+    res.json({ data: formattedData, total: count, page: Number(page), limit: Number(limit) });
   } catch (err) {
     next(err);
   }
