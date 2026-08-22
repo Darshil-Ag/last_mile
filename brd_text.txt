@@ -1,0 +1,90 @@
+
+BUSINESS REQUIREMENTS DOCUMENT
+Last-Mile Delivery Tracker
+
+Table of Contents
+1. Executive Summary
+2. Business Objectives
+3. Project Scope
+4. Stakeholders
+5. Functional Requirements
+6. Non-Functional Requirements
+7. Key Business Rules
+8. Assumptions & Constraints
+9. Deliverables
+10. Success Criteria / Acceptance Criteria
+11. Glossary
+
+1. Executive Summary
+Logistics operations depend on consistent pricing, reliable agent allocation, and timely customer communication. This document defines the business requirements for a Last-Mile Delivery Tracker: a platform where customers and administrators can create delivery orders with automatically calculated charges, where orders are routed to delivery agents intelligently, and where customers are kept informed at every stage of the delivery journey.
+The system replaces manual, ad-hoc pricing and assignment with a configurable rules engine — zone-based rate cards, volumetric weight billing, and COD surcharges — so that Operations can adjust pricing without engineering involvement, and so that every charge and every status change is traceable to who made it and when.
+2. Business Objectives
+Automate delivery charge calculation so pricing is consistent, transparent, and free of manual error.
+Reduce delivery-agent idle time and improve on-time pickup by intelligently assigning the nearest available agent.
+Improve customer trust and reduce support load through proactive status notifications and self-service tracking.
+Give Operations full configurability over zones, rate cards, and surcharges without requiring code changes.
+Maintain a complete, tamper-proof audit trail of every order's status and assignment history for accountability and dispute resolution.
+Provide a clear recovery path for failed deliveries so a failed attempt doesn't become a lost order.
+3. Project Scope
+3.1 In Scope
+Customer and Admin order creation with auto-calculated charges.
+Admin-configurable zones, pincode-to-zone mapping, and rate cards (B2B/B2C, intra/inter-zone).
+Admin-configurable COD surcharge per order type.
+Manual and automatic (nearest-available-agent) delivery agent assignment.
+Full order status lifecycle with immutable, timestamped, actor-attributed tracking history.
+Failed-delivery handling: customer notification, reschedule capture, and agent reassignment.
+Email notifications to customers on every status change.
+Admin dashboard capability: view all orders, filter by status/zone/agent, override order status.
+Role-based access control for Customer, Delivery Agent, and Admin.
+3.2 Out of Scope
+Real-time GPS map tracking / live agent location streaming to customers (agent location is used internally for assignment only).
+Payment gateway integration for online Prepaid collection (payment type is captured as a field, not processed).
+Native mobile applications (delivery is via web-based/API-driven frontend).
+Multi-currency or multi-country tax handling.
+SMS notifications beyond an optional integration point (email is the primary channel in scope).
+4. Stakeholders
+
+5. Functional Requirements
+5.1 Authentication & Roles
+5.2 Zone Management
+5.3 Rate & Surcharge Configuration
+5.4 Order Creation & Charge Calculation
+5.5 Agent Assignment
+5.6 Order Status & Tracking
+5.7 Failed Delivery & Reschedule
+5.8 Notifications
+6. Non-Functional Requirements
+
+7. Key Business Rules
+Volumetric weight = (Length × Breadth × Height) ÷ 5000.
+Chargeable weight = the greater of actual weight and volumetric weight.
+Rate applied depends on: order type (B2B or B2C) × zone relationship (intra-zone or inter-zone) — four distinct rate combinations minimum.
+COD surcharge applies only when payment type = COD, and is calculated per the order type's configured surcharge rule (flat or percentage).
+The calculated charge must be shown to the customer before the order is confirmed — no charge is finalized silently.
+An order's status can only move forward through the defined lifecycle (or to Failed), and every transition — including admin overrides — is permanently logged with actor and timestamp.
+A Failed order can only be rescheduled by capturing a new delivery date, which triggers a new agent assignment for that attempt.
+8. Assumptions & Constraints
+8.1 Assumptions
+Each pincode belongs to exactly one zone; zone boundaries do not overlap.
+Delivery agents' availability and approximate location are self-reported or system-tracked to a reasonable accuracy for assignment purposes.
+A free-tier email service is acceptable for notification delivery during evaluation/demo.
+Admin users are trusted internal operators; the BRD does not require a maker-checker approval flow for rate changes.
+8.2 Constraints
+Solution must be deployable to a standard hosting provider (e.g., Vercel, Render, Railway) within free/low-cost tiers.
+No hardcoded pricing, surcharge, or zone logic — all must be admin-configurable at runtime.
+System design write-up is capped at 800 words per the project deliverables.
+9. Deliverables
+Complete source code (zip / repository).
+README with setup guide, .env.example, API documentation, DB schema, and rate-calculation logic explanation.
+Hosted application URL.
+System design write-up (≤ 800 words) covering the rate engine, zone detection, auto-assignment logic, and failed-delivery handling.
+10. Success Criteria / Acceptance Criteria
+An order's charge is calculated correctly for all four combinations of order type × zone relationship, verified against admin-configured rate cards.
+Volumetric vs. actual weight billing is correct in both directions (volumetric wins when larger, actual wins when larger).
+COD surcharge is applied only for COD orders and matches the configured value.
+Auto-assignment consistently selects an available agent, and never assigns an agent at full capacity.
+Every status change (agent update or admin override) appears in the tracking timeline with correct timestamp and actor, and cannot be edited or deleted after the fact.
+A Failed order can be rescheduled by the customer, resulting in a new agent assignment and a customer notification.
+Admin can filter the full order list by status, zone, and agent without errors.
+A customer email notification is sent (or logged as attempted) for every status change.
+11. Glossary
