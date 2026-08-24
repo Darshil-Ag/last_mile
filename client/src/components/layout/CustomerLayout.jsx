@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -11,11 +11,17 @@ const customerNav = [
 ];
 
 export default function CustomerLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="app-shell">
-      <Sidebar nav={customerNav} />
+      <Sidebar
+        nav={customerNav}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       <div className="main-content">
-        <Navbar />
+        <Navbar onMenuToggle={() => setSidebarOpen((o) => !o)} />
         <main className="page-body">
           <Outlet />
         </main>

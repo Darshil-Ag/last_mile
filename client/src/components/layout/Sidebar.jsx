@@ -75,63 +75,85 @@ function resolveIcon(iconKey) {
   return Icons[iconKey] ?? null;
 }
 
-export default function Sidebar({ nav = [] }) {
+export default function Sidebar({ nav = [], isOpen = false, onClose = () => {} }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  const handleNavClick = (path) => {
+    navigate(path);
+    onClose(); // auto-close drawer on mobile after navigating
+  };
+
   return (
-    <aside className="sidebar">
-      {/* Item 5: flat ink-square LM monogram logomark */}
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">LM</div>
-        <div className="sidebar-logo-text">
-          Last-Mile
-          <span>Delivery Tracker</span>
-        </div>
-      </div>
+    <>
+      {/* Backdrop — only visible on mobile when sidebar is open */}
+      <div
+        className={`sidebar-backdrop ${isOpen ? 'visible' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      {/* Navigation */}
-      <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Menu</div>
-        {nav.map((item) => {
-          const isActive =
-            location.pathname === item.path ||
-            (item.path !== '/admin' &&
-              item.path !== '/agent' &&
-              item.path !== '/dashboard' &&
-              location.pathname.startsWith(item.path));
-          return (
-            <button
-              key={item.path}
-              className={`nav-link ${isActive ? 'active' : ''}`}
-              onClick={() => navigate(item.path)}
-            >
-              {/* Item 3: SVG icon, never emoji */}
-              <span className="nav-icon">
-                {resolveIcon(item.icon)}
-              </span>
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* User + Logout */}
-      <div className="sidebar-footer">
-        <div className="user-card" onClick={handleLogout} title="Click to logout">
-          <div className="user-avatar">{getInitials(user?.full_name)}</div>
-          <div className="user-info">
-            <div className="user-name">{user?.full_name}</div>
-            <div className="user-role">{user?.role}</div>
+      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+        {/* Item 5: flat ink-square LM monogram logomark */}
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">LM</div>
+          <div className="sidebar-logo-text">
+            Last-Mile
+            <span>Delivery Tracker</span>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--sidebar-muted)', flexShrink: 0 }}>
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-          </svg>
+          {/* Close button — only visible on mobile via CSS */}
+          <button
+            className="sidebar-close-btn"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className="sidebar-nav">
+          <div className="sidebar-section-label">Menu</div>
+          {nav.map((item) => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path !== '/admin' &&
+                item.path !== '/agent' &&
+                item.path !== '/dashboard' &&
+                location.pathname.startsWith(item.path));
+            return (
+              <button
+                key={item.path}
+                className={`nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavClick(item.path)}
+              >
+                {/* Item 3: SVG icon, never emoji */}
+                <span className="nav-icon">
+                  {resolveIcon(item.icon)}
+                </span>
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User + Logout */}
+        <div className="sidebar-footer">
+          <div className="user-card" onClick={handleLogout} title="Click to logout">
+            <div className="user-avatar">{getInitials(user?.full_name)}</div>
+            <div className="user-info">
+              <div className="user-name">{user?.full_name}</div>
+              <div className="user-role">{user?.role}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--sidebar-muted)', flexShrink: 0 }}>
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

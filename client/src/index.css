@@ -1197,3 +1197,215 @@ td.text-mono {
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
 .fw-700 { font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS — max-width: 768px
+   Desktop layout is completely untouched.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Sidebar drawer backdrop (mobile only, hidden on desktop) ── */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ── Hamburger button (hidden on desktop) ── */
+.hamburger-btn {
+  display: none;
+}
+
+/* ── Sidebar close button (hidden on desktop) ── */
+.sidebar-close-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* ── Sidebar: slide-in drawer ─────────────────────────────── */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 500;
+    width: 260px;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(19, 35, 56, 0.25);
+  }
+
+  /* Close × button inside sidebar header on mobile */
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: var(--sidebar-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 16px;
+    line-height: 1;
+    margin-left: auto;
+  }
+  .sidebar-close-btn:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+
+  /* ── Backdrop ─────────────────────────────────────────────── */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(19, 35, 56, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 499;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ── Hamburger button ─────────────────────────────────────── */
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--rule-strong);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+  .hamburger-btn:hover {
+    background: var(--surface-alt);
+  }
+
+  /* ── Main content: remove left margin ────────────────────── */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* ── Navbar: extend full width ────────────────────────────── */
+  .navbar {
+    left: 0 !important;
+    padding: 0 14px !important;
+  }
+
+  /* ── Page body: tighter padding ──────────────────────────── */
+  .page-body {
+    padding: 16px 14px !important;
+    padding-top: calc(var(--navbar-h) + 16px) !important;
+  }
+
+  /* ── Page header: stack on very small screens ────────────── */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* ── Stats grid: 2 columns ────────────────────────────────── */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+  }
+
+  /* ── Form grids: single column ────────────────────────────── */
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* ── Card padding ─────────────────────────────────────────── */
+  .card {
+    padding: 16px 14px;
+  }
+
+  /* ── Auth card: less horizontal padding ──────────────────── */
+  .auth-card {
+    padding: 28px 20px !important;
+  }
+
+  /* ── Modal: full-width bottom sheet feel ─────────────────── */
+  .modal {
+    max-width: 100% !important;
+    margin: 0;
+    padding: 20px 16px;
+  }
+  .modal-overlay {
+    padding: 12px 10px;
+    align-items: flex-end;
+  }
+
+  /* ── Filter bar: stack inputs full-width ─────────────────── */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-bar .form-input,
+  .filter-bar .form-select {
+    width: 100% !important;
+    min-width: unset;
+  }
+
+  /* ── Table: horizontal scroll ─────────────────────────────── */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    min-width: 540px;
+  }
+
+  /* ── Buttons: adequate touch targets ─────────────────────── */
+  .btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+  .btn-sm {
+    min-height: 38px;
+    padding: 7px 12px;
+  }
+
+  /* ── Charge box ───────────────────────────────────────────── */
+  .charge-box {
+    padding: 14px 12px;
+  }
+
+  /* ── Timeline: tighter on mobile ─────────────────────────── */
+  .timeline-content {
+    padding-bottom: 16px;
+  }
+
+  /* ── Auth card frame truck (hide on mobile) ──────────────── */
+  .truck-track {
+    display: none;
+  }
+  .auth-card-frame {
+    padding-top: 8px;
+  }
+}
+
+/* Tablet adjustments (768–1024px) — minor tweaks only */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .page-body {
+    padding: 20px 20px;
+    padding-top: calc(var(--navbar-h) + 20px);
+  }
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
