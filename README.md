@@ -18,7 +18,7 @@
 
 ### **[→ https://last-mile-lyart.vercel.app/login](https://last-mile-lyart.vercel.app/login)**
 
-*Deployed on Vercel (frontend) · Render (backend API) · Supabase (PostgreSQL database)*
+*Deployed on [Vercel](https://last-mile-lyart.vercel.app/login) (frontend) · [Render](https://last-mile-k1sc.onrender.com) (backend API) · [Supabase](https://supabase.com/dashboard/project/grcdpmqnymhnjbmycmjl) (PostgreSQL database)*
 
 </div>
 
@@ -142,7 +142,7 @@ FRONTEND_URL=http://localhost:5173
 # ── API Base URL ──────────────────────────────────────────────
 # Leave blank to use Vite's dev proxy (vite.config.js → proxy)
 # Set to your deployed backend URL for production
-VITE_API_BASE_URL=https://your-render-backend.onrender.com
+VITE_API_BASE_URL=https://last-mile-k1sc.onrender.com
 ```
 
 ### 5. Run locally
@@ -496,9 +496,9 @@ CREATED → ASSIGNED → PICKED_UP → IN_TRANSIT → OUT_FOR_DELIVERY → DELIV
 
 | Service | URL |
 |---|---|
-| **Frontend** | **[https://last-mile-lyart.vercel.app/login](https://last-mile-lyart.vercel.app/login)** |
-| **Backend API** | Hosted on Render |
-| **Database** | Supabase (PostgreSQL) |
+| **Frontend (Vercel)** | **[https://last-mile-lyart.vercel.app/login](https://last-mile-lyart.vercel.app/login)** |
+| **Backend API (Render)** | **[https://last-mile-k1sc.onrender.com](https://last-mile-k1sc.onrender.com)** |
+| **Database (Supabase)** | **[Supabase Project Dashboard](https://supabase.com/dashboard/project/grcdpmqnymhnjbmycmjl)** |
 
 ### Frontend — Vercel
 
