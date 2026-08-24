@@ -24,9 +24,15 @@
 
 ---
 
-**Quick Navigation:** [Setup Guide](#setup-guide) · [API Docs](#api-documentation) · [DB Schema](#database-schema) · [Rate Logic](#rate-calculation-logic) · [System Design](./SYSTEM_DESIGN.md) · [Deployment](#deployment)
-
-**Repository:** [github.com/Darshil-Ag/last_mile](https://github.com/Darshil-Ag/last_mile)
+> [!IMPORTANT]
+> **📐 Deep-Dive Architecture & System Design Specification**
+> For exhaustive subsystem breakdowns, state transition models, and full flowcharts, open the dedicated **[SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md)** document.
+> 
+> **Key Coverage in [SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md):**
+> 1. **Rate Calculation Engine** — Volumetric formula, rate card matching, COD surcharge
+> 2. **Zone Detection & Fallback** — Pincode mapping & 422 early rejection
+> 3. **Agent Auto-Assignment Algorithm** — Two-tiered Haversine distance ranking
+> 4. **Failed Delivery Lifecycle & Reschedule** — Immutable audit triggers & reassignment
 
 ---
 
@@ -345,7 +351,64 @@ erDiagram
 
 All pricing is read from the database at runtime. **Zero rates are hardcoded** in application code.
 
-### Step-by-Step
+### Figure 1 — Rate Calculation Engine Pipeline
+
+```mermaid
+flowchart TD
+    A([Customer enters package details]) --> B[POST /api/orders/calculate]
+    B --> C{Pickup pincode\nmapped to zone?}
+    C -- No --> D[422: Pincode not mapped\nto any delivery zone]
+    C -- Yes --> E{Drop pincode\nmapped to zone?}
+    E -- No --> D
+    E -- Yes --> F[Resolve pickup_zone &\ndrop_zone from zone_pincodes]
+    F --> G["Volumetric weight\n= L × B × H ÷ 5000"]
+    G --> H["Chargeable weight\n= max(actual, volumetric)"]
+    H --> I["Lookup rate_cards\nWHERE from_zone, to_zone,\norder_type, is_active=true,\neffective_from ≤ NOW"]
+    I --> J{Rate card\nfound?}
+    J -- No --> K[422: No active rate card\nfor this zone pair]
+    J -- Yes --> L["base_charge = base_price\n+ max(chargeable, min_chargeable_kg)\n× rate_per_kg"]
+    L --> M{payment_type\n= COD?}
+    M -- No --> N[cod_surcharge = 0]
+    M -- Yes --> O["Lookup cod_surcharge_configs\n(FIXED or PERCENTAGE)"]
+    O --> P["cod_surcharge = fixed_value\nor base_charge × pct / 100"]
+    P --> Q
+    N --> Q["total_charge =\nbase_charge + cod_surcharge"]
+    Q --> R([Return breakdown to UI\nwithout writing to DB])
+    R --> S{Customer\nconfirms order?}
+    S -- Yes --> T[POST /api/orders\nLocks all values into orders row\nNever recalculated]
+```
+
+### Figure 2 — Zone Detection & Resolution Flow
+
+```mermaid
+flowchart LR
+    subgraph Admin["Admin Configuration"]
+        direction TB
+        Z1[zones table\nid, name, code, is_active]
+        Z2[zone_pincodes table\nzone_id → pincode\nUNIQUE pincode]
+        Z1 --> Z2
+    end
+
+    subgraph Lookup["Runtime Lookup — resolveZone()"]
+        direction TB
+        P([Input: pincode]) --> Q["SELECT zone_id, zones\nFROM zone_pincodes\nWHERE pincode = input"]
+        Q --> R{Row found?}
+        R -- No --> ERR["Throw 422\nPincode not mapped\nto any delivery zone"]
+        R -- Yes --> OK([Return zone object\nid, name, code])
+    end
+
+    subgraph Frontend["Frontend Error Handling"]
+        direction TB
+        ERR2["Detect 'not mapped'\nin error message"]
+        Panel["Render Zone Not Available panel\n• List all active zones\n• Link: Login as Admin\n  to configure zones"]
+        ERR2 --> Panel
+    end
+
+    Z2 -.->|queried by| Q
+    ERR -.->|caught by| ERR2
+```
+
+### Step-by-Step Breakdown
 
 **Step 1 — Zone Resolution**
 ```
@@ -465,6 +528,56 @@ All endpoints are prefixed with `/api`. JWT required unless marked **Public**.
 
 ## Order Status Lifecycle
 
+### Figure 3 — Agent Auto-Assignment Algorithm
+
+```mermaid
+flowchart TD
+    A([Trigger: POST /api/orders/:id/assign\ntype=AUTO]) --> B["SELECT agents\nWHERE availability_status = AVAILABLE\nAND is_active = true"]
+    B --> C{Any available\nagents?}
+    C -- No --> FAIL([409: No available agent\nPlease assign manually])
+    C -- Yes --> D["Compute Haversine distance\nfor each agent\nagent.lat/lng → pickup.lat/lng\n∞ if coords missing"]
+    D --> E["Split into\ntwo pools"]
+
+    E --> F["In-Zone Pool\nagent.current_zone_id\n= order.pickup_zone_id\nsorted by distance ↑"]
+    E --> G["Out-of-Zone Pool\nall others\nsorted by distance ↑"]
+
+    F --> H{In-zone\nagents exist?}
+    H -- Yes --> I["Select closest in-zone agent\nassignment_type = AUTO\nreason = null"]
+    H -- No --> J["Select closest out-of-zone agent\nassignment_type = AUTO\nreason = cross-zone fallback"]
+
+    I --> K["executeAssignment()\n• Close active order_assignments row\n• INSERT new order_assignments\n• INSERT delivery_attempts\n• Set agent.availability_status = BUSY"]
+    J --> K
+
+    K --> N([INSERT tracking_event status=ASSIGNED\nTrigger syncs orders.current_status\nEmail sent to customer])
+```
+
+### Figure 4 — Failed Delivery & Reschedule Flow
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant API as Express API
+    participant DB as Supabase (PostgreSQL)
+    participant Email as Resend Email
+    participant Customer
+
+    Agent->>API: PUT /api/orders/:id/status\n{ status: FAILED, failure_reason: "..." }
+    API->>DB: Validate transition\nOUT_FOR_DELIVERY → FAILED ✓
+
+    API->>DB: INSERT tracking_events\n{ status: FAILED, actor_id, actor_role }
+    Note over DB: DB Trigger 1 (immutable):<br/>BLOCKS all UPDATE/DELETE
+
+    DB-->>DB: DB Trigger 2 (sync):<br/>UPDATE orders SET current_status = FAILED
+
+    API->>DB: UPDATE delivery_attempts & free agent to AVAILABLE
+    API->>Email: sendStatusEmail(FAILED template)
+
+    Customer->>API: POST /api/orders/:id/reschedule\n{ scheduled_date: "YYYY-MM-DD" }
+    API->>API: findBestAgent()\nRe-runs full auto-assignment
+    API->>DB: executeAssignment()\n• New assignment & attempt (number + 1)
+    API->>Email: sendStatusEmail(RESCHEDULED template)
+```
+
 ```
 CREATED → ASSIGNED → PICKED_UP → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED
                                                                ↘
@@ -487,6 +600,10 @@ CREATED → ASSIGNED → PICKED_UP → IN_TRANSIT → OUT_FOR_DELIVERY → DELIV
 **Transition rules** are enforced server-side. Agents may only advance to the next valid state. Admins can override to any status.
 
 **Immutability guarantee:** Every status change writes a new row to `tracking_events`. A PostgreSQL trigger blocks all `UPDATE` and `DELETE` operations on this table at the database level.
+
+> [!TIP]
+> **🔍 Need complete subsystem specifications?**
+> Read **[SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md)** for exhaustive details on every calculation, database constraint, and fallback handler!
 
 ---
 
