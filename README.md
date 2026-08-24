@@ -24,7 +24,7 @@
 
 ---
 
-**Quick Navigation:** [Setup Guide](#setup-guide) · [API Docs](#api-documentation) · [DB Schema](#database-schema) · [Rate Logic](#rate-calculation-logic) · [Deployment](#deployment)
+**Quick Navigation:** [Setup Guide](#setup-guide) · [API Docs](#api-documentation) · [DB Schema](#database-schema) · [Rate Logic](#rate-calculation-logic) · [System Design](./SYSTEM_DESIGN.md) · [Deployment](#deployment)
 
 **Repository:** [github.com/Darshil-Ag/last_mile](https://github.com/Darshil-Ag/last_mile)
 
@@ -438,6 +438,23 @@ last_mile/
 ├── vercel.json                  # Vercel SPA rewrite config
 └── README.md
 ```
+
+---
+
+---
+
+## System Design
+
+A detailed technical write-up with architecture diagrams is available in **[SYSTEM_DESIGN.md](./SYSTEM_DESIGN.md)**.
+
+It covers the four core subsystems with Mermaid flow diagrams:
+
+| # | Section | What the diagram shows |
+|---|---|---|
+| 1 | **Rate Calculation Engine** | End-to-end pipeline from pincode input → weight calculation → rate card lookup → COD surcharge → locked charge on order |
+| 2 | **Zone Detection** | How `resolveZone()` queries `zone_pincodes`, the 422 rejection path, and the admin configuration flow |
+| 3 | **Auto-Assignment Logic** | Two-tier agent selection (in-zone → cross-zone fallback), Haversine distance sort, and manual override path |
+| 4 | **Failed Delivery & Reschedule** | Sequence diagram showing immutable event logging, agent release, customer notification, and re-run of auto-assignment on reschedule |
 
 ---
 
