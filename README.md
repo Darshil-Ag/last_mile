@@ -183,23 +183,160 @@ The schema is defined in [`schema.sql`](./schema.sql) and targets PostgreSQL (vi
 
 ```mermaid
 erDiagram
-    users ||--o{ orders : "places (customer)"
-    users ||--o{ orders : "creates (admin/self)"
-    users ||--o| agents : "has profile"
-    zones ||--o{ zone_pincodes : "has many"
-    zones ||--o{ rate_cards : "from_zone"
-    zones ||--o{ rate_cards : "to_zone"
-    zones ||--o{ agents : "current zone"
-    zones ||--o{ orders : "pickup zone"
-    zones ||--o{ orders : "drop zone"
-    orders ||--o{ order_assignments : "assigned via"
-    orders ||--o{ delivery_attempts : "attempted via"
-    orders ||--o{ tracking_events : "history"
-    orders ||--o{ notifications : "triggers"
-    agents ||--o{ order_assignments : "assigned to"
-    agents ||--o{ delivery_attempts : "performs"
-    rate_cards ||--o{ orders : "priced by"
-    order_assignments ||--o{ delivery_attempts : "corresponds to"
+
+    %% ── Core identity ──────────────────────────────────────────
+    users {
+        uuid   id            PK
+        text   full_name
+        text   email         UK
+        enum   role             "CUSTOMER | AGENT | ADMIN"
+        text   phone
+        timestamptz created_at
+    }
+
+    %% ── Zone configuration ─────────────────────────────────────
+    zones {
+        uuid    id           PK
+        text    name
+        text    code         UK
+        boolean is_active
+    }
+
+    zone_pincodes {
+        uuid    id           PK
+        uuid    zone_id      FK
+        varchar pincode      UK  "one pincode → one zone"
+    }
+
+    %% ── Pricing configuration ──────────────────────────────────
+    rate_cards {
+        uuid    id                PK
+        uuid    from_zone_id      FK
+        uuid    to_zone_id        FK
+        enum    order_type           "B2B | B2C"
+        numeric base_price
+        numeric rate_per_kg
+        numeric min_chargeable_kg
+        boolean is_active
+        timestamptz effective_from
+        timestamptz effective_to
+    }
+
+    cod_surcharge_configs {
+        uuid    id              PK
+        enum    order_type         "B2B | B2C"
+        enum    surcharge_type     "FIXED | PERCENTAGE"
+        numeric surcharge_value
+        boolean is_active
+    }
+
+    %% ── Agents ─────────────────────────────────────────────────
+    agents {
+        uuid    id                  PK
+        uuid    user_id             FK  "→ users"
+        uuid    current_zone_id     FK  "→ zones"
+        numeric latitude
+        numeric longitude
+        enum    availability_status    "AVAILABLE | BUSY | OFFLINE"
+        boolean is_active
+    }
+
+    %% ── Core transaction ───────────────────────────────────────
+    orders {
+        uuid    id               PK
+        text    order_number     UK  "ORD-YYYYMMDD-NNNNN"
+        uuid    customer_id      FK  "→ users"
+        uuid    created_by       FK  "→ users"
+        uuid    pickup_zone_id   FK  "→ zones"
+        uuid    drop_zone_id     FK  "→ zones"
+        uuid    rate_card_id     FK  "→ rate_cards"
+        numeric actual_weight_kg
+        numeric volumetric_weight_kg
+        numeric chargeable_weight_kg
+        enum    order_type          "B2B | B2C"
+        enum    payment_type        "PREPAID | COD"
+        numeric base_charge
+        numeric cod_surcharge
+        numeric total_charge
+        enum    current_status      "CREATED → … → DELIVERED"
+        timestamptz confirmed_at
+    }
+
+    %% ── Assignment & attempt history ───────────────────────────
+    order_assignments {
+        uuid    id               PK
+        uuid    order_id         FK
+        uuid    agent_id         FK
+        uuid    assigned_by      FK  "→ users (nullable)"
+        enum    assignment_type     "AUTO | MANUAL | RESCHEDULE"
+        text    reason
+        timestamptz assigned_at
+        timestamptz unassigned_at   "null = currently active"
+    }
+
+    delivery_attempts {
+        uuid    id               PK
+        uuid    order_id         FK
+        uuid    agent_id         FK
+        uuid    assignment_id    FK
+        integer attempt_number
+        date    scheduled_date
+        enum    status              "SCHEDULED | IN_PROGRESS | DELIVERED | FAILED"
+        text    failure_reason
+        timestamptz completed_at
+    }
+
+    %% ── Immutable audit log ────────────────────────────────────
+    tracking_events {
+        uuid    id          PK
+        uuid    order_id    FK
+        enum    status         "mirrors order_status enum"
+        uuid    actor_id    FK  "→ users (nullable)"
+        enum    actor_role
+        numeric latitude
+        numeric longitude
+        text    remarks
+        timestamptz created_at  "immutable — DB trigger blocks UPDATE/DELETE"
+    }
+
+    %% ── Notification log ───────────────────────────────────────
+    notifications {
+        uuid    id            PK
+        uuid    order_id      FK
+        uuid    recipient_id  FK  "→ users"
+        enum    channel          "EMAIL | SMS"
+        text    event_type
+        enum    status           "PENDING | SENT | FAILED"
+        jsonb   metadata
+        timestamptz sent_at
+    }
+
+    %% ── Relationships ──────────────────────────────────────────
+    users              ||--o{ orders             : "places as customer"
+    users              ||--o{ orders             : "creates (admin/self)"
+    users              ||--o| agents             : "has agent profile"
+    users              ||--o{ tracking_events    : "acts as actor"
+    users              ||--o{ order_assignments  : "assigns (admin)"
+    users              ||--o{ notifications      : "receives"
+
+    zones              ||--o{ zone_pincodes      : "contains pincodes"
+    zones              ||--o{ rate_cards         : "as from_zone"
+    zones              ||--o{ rate_cards         : "as to_zone"
+    zones              ||--o{ agents             : "current zone"
+    zones              ||--o{ orders             : "pickup zone"
+    zones              ||--o{ orders             : "drop zone"
+
+    rate_cards         ||--o{ orders             : "prices"
+
+    orders             ||--o{ order_assignments  : "has assignments"
+    orders             ||--o{ delivery_attempts  : "has attempts"
+    orders             ||--o{ tracking_events    : "append-only history"
+    orders             ||--o{ notifications      : "triggers emails"
+
+    agents             ||--o{ order_assignments  : "assigned via"
+    agents             ||--o{ delivery_attempts  : "performs"
+
+    order_assignments  ||--o{ delivery_attempts  : "spawns attempt"
 ```
 
 ---
