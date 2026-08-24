@@ -22,6 +22,19 @@
 
 </div>
 
+### 🔑 Demo Login Credentials
+
+All seeded demo accounts use the password: **`Password@123`**
+
+| Role | Email | Password | Details |
+|---|---|---|---|
+| 👑 **Admin** | `admin@lastmile.dev` | `Password@123` | Full system access, zone & agent management, manual overrides |
+| 🛵 **Delivery Agent 1** | `ravi.agent@lastmile.dev` | `Password@123` | South Mumbai Zone (`AVAILABLE`) |
+| 🛵 **Delivery Agent 2** | `priya.agent@lastmile.dev` | `Password@123` | Central Mumbai Zone (`AVAILABLE`) |
+| 🛵 **Delivery Agent 3** | `arjun.agent@lastmile.dev` | `Password@123` | Navi Mumbai Zone (`OFFLINE`) |
+| 📦 **Customer** | `sneha@example.com` | `Password@123` | Order creation, tracking, rescheduling |
+
+
 ---
 
 > [!IMPORTANT]
