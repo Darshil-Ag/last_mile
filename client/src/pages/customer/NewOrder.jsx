@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ordersAPI, zonesAPI } from '../../services/api';
 import { formatCurrency, formatWeight } from '../../utils/formatters';
+import { useAuth } from '../../context/AuthContext';
 
 const INITIAL = {
   pickup_address: '', pickup_pincode: '',
@@ -14,10 +15,13 @@ const INITIAL = {
 
 export default function NewOrder() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState(INITIAL);
   const [charge, setCharge] = useState(null);
   const [calcLoading, setCalcLoading] = useState(false);
   const [calcError, setCalcError] = useState('');
+  const [isZoneError, setIsZoneError] = useState(false);
+  const [availableZones, setAvailableZones] = useState([]);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState('');
   const debounceRef = useRef(null);
@@ -43,16 +47,22 @@ export default function NewOrder() {
   useEffect(() => {
     const { pickup_pincode, drop_pincode, length_cm, breadth_cm, height_cm, actual_weight_kg, order_type, payment_type } = form;
     if (!pickup_pincode || !drop_pincode || !length_cm || !breadth_cm || !height_cm || !actual_weight_kg) {
-      setCharge(null); return;
+      setCharge(null); setCalcError(''); setIsZoneError(false); return;
     }
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      setCalcLoading(true); setCalcError('');
+      setCalcLoading(true); setCalcError(''); setIsZoneError(false);
       try {
         const res = await ordersAPI.calculate({ pickup_pincode, drop_pincode, length_cm: +length_cm, breadth_cm: +breadth_cm, height_cm: +height_cm, actual_weight_kg: +actual_weight_kg, order_type, payment_type });
         setCharge(res.data);
       } catch (err) {
-        setCalcError(err.response?.data?.error || 'Could not calculate charge');
+        const msg = err.response?.data?.error || 'Could not calculate charge';
+        const isPincodeZoneErr = msg.toLowerCase().includes('not mapped') || msg.toLowerCase().includes('zone');
+        setCalcError(msg);
+        setIsZoneError(isPincodeZoneErr);
+        if (isPincodeZoneErr && availableZones.length === 0) {
+          try { const zRes = await zonesAPI.list(); setAvailableZones(zRes.data || []); } catch {}
+        }
         setCharge(null);
       } finally { setCalcLoading(false); }
     }, 600);
@@ -172,7 +182,65 @@ export default function NewOrder() {
             Calculating charge…
           </div>
         )}
-        {calcError && <div className="auth-error mb-16">{calcError}</div>}
+        {calcError && !calcLoading && (
+          isZoneError ? (
+            <div style={{
+              background: 'var(--warning-bg)',
+              border: '1px solid var(--warning-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '14px 16px',
+              marginBottom: 16,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>🚫</span>
+                <span style={{ fontWeight: 700, color: 'var(--warning)', fontSize: 13 }}>Zone Not Available</span>
+              </div>
+              <p style={{ fontSize: 12.5, color: 'var(--warning)', marginBottom: 10, lineHeight: 1.5 }}>
+                The pincode you entered is not mapped to any delivery zone yet.
+              </p>
+              {availableZones.length > 0 && (
+                <>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--steel)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+                    Available Zones
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {availableZones.map(z => (
+                      <span key={z.id} style={{
+                        background: 'var(--surface)',
+                        border: '1px solid var(--rule-strong)',
+                        borderRadius: 4,
+                        padding: '3px 8px',
+                        fontSize: 11.5,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        color: 'var(--ink)',
+                      }}>
+                        {z.name} <span style={{ color: 'var(--signal)' }}>({z.code})</span>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div style={{ fontSize: 12, color: 'var(--steel)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>🔐</span>
+                {user?.role === 'ADMIN' ? (
+                  <span>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/admin/zones')}
+                      style={{ background: 'none', border: 'none', color: 'var(--signal)', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 12 }}
+                    >
+                      Go to Zone Management
+                    </button>{' '}to add this pincode to a zone.
+                  </span>
+                ) : (
+                  <span>Ask your admin to add this pincode to a delivery zone.</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="auth-error mb-16">{calcError}</div>
+          )
+        )}
         {charge && !calcLoading && (
           <div className="charge-box mb-20">
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>

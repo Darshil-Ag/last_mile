@@ -2,6 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency, formatWeight } from '../../utils/formatters';
 
+/* ─── Fetch available zones (public — no auth token) ─────────── */
+async function fetchAvailableZones() {
+  try {
+    const base = import.meta.env.VITE_API_BASE_URL
+      ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '').replace(/\/api$/, '') + '/api'
+      : '/api';
+    // zones endpoint requires JWT, but we can detect zone errors without it
+    // Instead, extract zone names from a calculate error by fetching zones with a temp call
+    const res = await fetch(`${base}/zones`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
 /* ─── Inline truck SVG (shared with Login + PublicTrack) ─────── */
 const TruckSVG = () => (
   <svg
@@ -69,6 +86,8 @@ export default function PublicCalculator() {
   const [charge, setCharge]   = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [isZoneError, setIsZoneError]   = useState(false);
+  const [availableZones, setAvailableZones] = useState([]);
   const debounceRef           = useRef(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -92,6 +111,7 @@ export default function PublicCalculator() {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       setError('');
+      setIsZoneError(false);
       try {
         const result = await fetchCalculate({
           pickup_pincode, drop_pincode,
@@ -103,9 +123,13 @@ export default function PublicCalculator() {
         });
         setCharge(result);
       } catch (err) {
-        /* Pass the backend error message through unchanged — rateEngine already
-           returns user-facing copy ("Pincode X is not mapped to any delivery zone") */
-        setError(err.message);
+        const msg = err.message || '';
+        const isPincodeZoneErr = msg.toLowerCase().includes('not mapped') || msg.toLowerCase().includes('zone');
+        setError(msg);
+        setIsZoneError(isPincodeZoneErr);
+        if (isPincodeZoneErr && availableZones.length === 0) {
+          fetchAvailableZones().then(setAvailableZones);
+        }
         setCharge(null);
       } finally {
         setLoading(false);
@@ -245,9 +269,58 @@ export default function PublicCalculator() {
               </div>
             )}
 
-            {/* Error — backend copy passed through verbatim */}
+            {/* Error — zone-unavailable gets special UI, generic gets red banner */}
             {error && !loading && (
-              <div className="auth-error">{error}</div>
+              isZoneError ? (
+                <div style={{
+                  background: 'var(--warning-bg)',
+                  border: '1px solid var(--warning-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 18 }}>🚫</span>
+                    <span style={{ fontWeight: 700, color: 'var(--warning)', fontSize: 13 }}>Zone Not Available</span>
+                  </div>
+                  <p style={{ fontSize: 12.5, color: 'var(--warning)', marginBottom: 10, lineHeight: 1.5 }}>
+                    The pincode you entered is not mapped to any delivery zone yet.
+                  </p>
+                  {availableZones.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--steel)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+                        Available Zones
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                        {availableZones.map(z => (
+                          <span key={z.id} style={{
+                            background: 'var(--surface)',
+                            border: '1px solid var(--rule-strong)',
+                            borderRadius: 4,
+                            padding: '3px 8px',
+                            fontSize: 11.5,
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            color: 'var(--ink)',
+                          }}>
+                            {z.name} <span style={{ color: 'var(--signal)' }}>({z.code})</span>
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <div style={{ fontSize: 12, color: 'var(--steel)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>🔐</span>
+                    <span>
+                      Want to add this zone?{' '}
+                      <Link to="/login" style={{ color: 'var(--signal)', fontWeight: 600 }}>
+                        Login as Admin
+                      </Link>{' '}
+                      to configure zones and pincodes.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="auth-error">{error}</div>
+              )
             )}
 
             {/* Charge breakdown — reuses charge-box / charge-row CSS from index.css
